@@ -1,0 +1,39 @@
+name: Detection CI
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XML validator
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Validate XML
+        run: |
+          for f in rules/*.xml; do xmllint --noout "$f"; done
+
+      - name: Check rule IDs (unique, in 100000-120000)
+        run: |
+          ids=$(grep -hoE 'rule id="[0-9]+"' rules/*.xml | grep -oE '[0-9]+')
+          dups=$(echo "$ids" | sort | uniq -d)
+          if [ -n "$dups" ]; then echo "Duplicate rule IDs: $dups"; exit 1; fi
+          for id in $ids; do
+            if [ "$id" -lt 100000 ] || [ "$id" -gt 120000 ]; then
+              echo "Rule ID $id is outside 100000-120000"; exit 1
+            fi
+          done
+
+      - name: Check MITRE mapping
+        run: |
+          for f in rules/*.xml; do
+            grep -q "<mitre>" "$f" || { echo "$f has no MITRE mapping"; exit 1; }
+          done
