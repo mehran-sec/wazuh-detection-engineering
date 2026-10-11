@@ -1,0 +1,10 @@
+<group name="local,sudo,privilege_escalation,">
+  <rule id="100110" level="8">
+    <if_sid>5402</if_sid>
+    <regex type="pcre2">COMMAND=(?:/usr)?/s?bin/(?:su|bash|sh|dash|zsh|ksh|fish)(?:\s|$)</regex>
+    <description>sudo: root shell opened via sudo (su/bash/sh) - possible privilege escalation</description>
+    <mitre>
+      <id>T1548.003</id>
+    </mitre>
+  </rule>
+</group>
